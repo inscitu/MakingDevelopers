@@ -4,4 +4,5 @@ var gulp = require('gulp');
 gulp.task('lint', require('./gulp/eslint'));
 
 // Tasks
-gulp.task('analize', ['lint']);
+gulp.task('analyze', ['lint']);
+gulp.task('pre-push', ['lint']);
