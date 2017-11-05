@@ -1,20 +1,22 @@
 {{#compress}}
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    {{> site/metas }}
-    <title>Making Developers</title>
-    <link rel="stylesheet" href="/css/style.css">
-  </head>
+<html lang="{{ __.Site.language }}">
+    <head>
+      {{> site/metas }}
+      <title>Making Developers</title>
 
-  <body>
-    {{> site/header }}
+      {{#css}}
+      <link rel="stylesheet" href="{{ this }}" /> {{/css}}
+    </head>
 
-    <div class="container">
-      {{{ body }}}
-    </div>
+    <body>
+      {{> site/header }}
 
-    {{> development/livereload }}
-  </body>
+      <div class="container">
+        {{{ body }}}
+      </div>
+
+      {{> development/livereload }}
+    </body>
 </html>
 {{/compress}}

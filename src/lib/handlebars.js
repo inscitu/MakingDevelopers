@@ -1,4 +1,9 @@
+import $config from './config';
 import { minify } from 'html-minifier';
+
+export default {
+  compress
+};
 
 function compress(content) {
   if (!$config().html.minify) {
@@ -11,7 +16,3 @@ function compress(content) {
     minifyJS: true
   });
 }
-
-export default {
-  compress: compress
-};
