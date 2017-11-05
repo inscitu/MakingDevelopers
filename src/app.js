@@ -1,44 +1,50 @@
-'use strict';
+import express from 'express';
+import path from 'path';
+import logger from 'morgan';
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import exphbs from 'express-handlebars';
+import stylus from 'stylus';
 
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+import config from './lib/config';
+import hbsHelpers from './lib/helpers/handlebars';
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-var app = express();
+import routes from './routes/index';
+import users from './routes/users';
 
-var exphbs = require('express-handlebars');
-var hbsHelpers = require('./lib/helpers/handlebars');
-var stylus = require('stylus');
+const app = express();
 
 // Loading config
-global.$config = require('./lib/config');
+global.$config = config;
 
 // Stylus middleware
 if (!$config().html.css.stylusPrecompile) {
-    app.use(
-        stylus.middleware({
-            src: path.join(__dirname + '/stylus'),
-            dest: path.join(__dirname + '/public/css'),
-            compile: function (str, path) {
-                return stylus(str)
-                    .set('filename', path)
-                    .set('compress', true);
-            }
-        })
-    );
+  app.use(
+    stylus.middleware({
+      src: path.join(__dirname, '/stylus'),
+      dest: path.join(__dirname, '/public/css'),
+      compile: function (str, path) {
+        return stylus(str)
+          .set('filename', path)
+          .set('compress', true);
+      }
+    })
+  );
 }
+
+// Sending config to templates
+app.use((req, res, next) => {
+  res.locals.config = $config();
+  next();
+});
 
 // Handlebars setup
 app.engine($config().views.engine, exphbs({
-    extname: $config().views.extension,
-    defaultLayout: $config().views.layout,
-    layoutsDir: path.join(__dirname + '/views/layouts'),
-    partialsDir: path.join(__dirname + '/views/partials'),
-    helpers: hbsHelpers
+  extname: $config().views.extension,
+  defaultLayout: $config().views.layout,
+  layoutsDir: path.join(__dirname, '/views/layouts'),
+  partialsDir: path.join(__dirname, '/views/partials'),
+  helpers: hbsHelpers
 }));
 
 // view engine setup
@@ -52,29 +58,39 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
+// Routes
+app.use('/', routes);
 app.use('/users', users);
 
+// Disabling x-powered-by
+app.disable('x-powered-by');
+
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
+// development error handler
+if (app.get('env') === 'development') {
+  app.use((err, req, res, next) => {
     res.status(err.status || 500);
-    res.render('error');
-});
-
-if (!module.parent) {
-    app.listen($config().serverPort);
+    res.render('error', {
+      message: err.message,
+      error: err
+    });
+  });
 }
 
-module.exports = app;
+// production error handler
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
+});
+
+// Listening port...
+app.listen($config().serverPort || 3000);
