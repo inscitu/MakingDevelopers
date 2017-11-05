@@ -2,6 +2,10 @@
 logs
 *.log
 
+src/public/bower_components
+src/public/css/**/*.css
+src/public/css/*.css
+
 # Runtime data
 pids
 *.pid

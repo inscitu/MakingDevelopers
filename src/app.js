@@ -8,12 +8,39 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-
 var app = express();
+
+var exphbs = require('express-handlebars');
+var hbsHelpers = require('./lib/helpers/handlebars');
+var stylus = require('stylus');
+
+// Stylus middleware
+function compile(str, path) {
+    return stylus(str)
+        .set('filename', path)
+        .set('compress', true);
+};
+
+app.use(
+    stylus.middleware({
+        src: __dirname + '/stylus',
+        dest: __dirname + '/public/css',
+        compile: compile
+    })
+);
+
+// Handlebars setup
+app.engine('.hbs', exphbs({
+    extname: '.hbs',
+    defaultLayout: 'main',
+    layoutsDir: __dirname + '/views/layouts',
+    partialsDir: __dirname + '/views/partials',
+    helpers: hbsHelpers
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', '.hbs');
 
 // uncomment after placing your favicon in /public
 app.use(logger('dev'));
